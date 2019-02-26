@@ -8,7 +8,7 @@
 #define UNIT_SIZE 1
 #define CELL_COUNT_HORIZONTAL (SCREEN_WIDTH / UNIT_SIZE)
 #define CELL_COUNT_VERTICAL (SCREEN_HEIGHT / UNIT_SIZE)
-#define GRID_SIZE 100
+#define GRID_SIZE 200
 // need one extra x and y layer for cells on the edge
 #define GRID_COUNT_VERTICAL ((CELL_COUNT_VERTICAL / GRID_SIZE) + 1)
 #define GRID_COUNT_HORIZONTAL ((CELL_COUNT_HORIZONTAL / GRID_SIZE) + 1)
@@ -86,6 +86,8 @@ void draw_value_noise() {
 }
 
 void draw_simplex_noise() {
+    float minVal = 0.0f;
+    float maxVal = 0.0f;
     for (int i = 0; i < CELL_COUNT_VERTICAL; i++) {
         for (int j = 0; j < CELL_COUNT_HORIZONTAL; j++) {
             float skewedX = j;
@@ -117,17 +119,25 @@ void draw_simplex_noise() {
                 float distX = (j / (float)GRID_SIZE) - unskewedSimplexX;
                 float distY = (i / (float)GRID_SIZE) - unskewedSimplexY;
                 int simplexGradIndex = (simplexX * GRID_COUNT_HORIZONTAL + simplexY) * 2;
-                float gradX = get_random_byte(simplexGradIndex) + 128.0f;
-                float gradY = get_random_byte(simplexGradIndex + 1) + 128.0f;
+                float gradX = get_random_byte(simplexGradIndex);
+                float gradY = get_random_byte(simplexGradIndex + 1);
                 float contribution = get_kernel_contribution(gradX, gradY, distX, distY);
                 kernelValue += contribution;
             }
 
-            log_int(kernelValue * 256.0f);
-            color_cell(j, i, (int)(kernelValue * 256.0f));
+            kernelValue = (kernelValue + 5.2f) * 20.0f;
+            if (kernelValue > maxVal) {
+                maxVal = kernelValue;
+            }
+            if (kernelValue < minVal) {
+                minVal = kernelValue;
+            }
+            color_cell(j, i, (int)kernelValue);
         }
     }
 
+    log_float(maxVal);
+    log_float(minVal);
     log_message("drawing complete");
 }
 
@@ -161,11 +171,9 @@ void from_skewed_space(float *x, float *y) {
 }
 
 // (max(0, r^2 - d^2))^4 * (<distX, distY> . <gradX, gradY>)
-// r = 0.6 by default, set to 0.5 to eliminate discontinuities
+// r^2 = 0.6 by default, set to 0.5 to eliminate discontinuities
 float get_kernel_contribution(float gradX, float gradY, float distX, float distY) {
-    distX = distX > 0.0f ? distX : -distX;
-    distY = distY > 0.0f ? distY : -distY;
-    static float rSqrd = 0.36f;
+    static float rSqrd = 0.6f;
     float distSqrd = distX * distX + distY * distY;
     float coefficient = rSqrd - distSqrd;
     if (coefficient < 0.0f) {
