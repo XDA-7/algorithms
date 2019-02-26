@@ -47,6 +47,7 @@ int main(int argc, char * argv[])
     init();
     init_random();
     draw_simplex_noise();
+    SDL_RenderPresent(gRenderer);
 
     int quit = 0;
     while(!quit) {
@@ -82,26 +83,9 @@ void draw_value_noise() {
             color_cell(j, i, value);
         }
     }
-
-    SDL_RenderPresent(gRenderer);
 }
 
 void draw_simplex_noise() {
-    // the randomised vectors for each vertex on the grid in the skewed space
-    float skewedSpaceVectors[GRID_COUNT * 2];
-    // the coordinates of each grid vertex in skewed space converted to unskewed space
-    float unSkewedSpaceCoordinates[GRID_COUNT * 2];
-    populate_floats(skewedSpaceVectors, GRID_COUNT * 2);
-    for (int i = 0; i < GRID_COUNT_VERTICAL + 1; i++) {
-        for (int j = 0; j < GRID_COUNT_HORIZONTAL + 1; j++) {
-            float x = j, y = i;
-            int xIndex = (i * GRID_COUNT_HORIZONTAL + j) * 2;
-            from_skewed_space(&x, &y);
-            unSkewedSpaceCoordinates[xIndex] = x;
-            unSkewedSpaceCoordinates[xIndex + 1] = y;
-        }
-    }
-
     for (int i = 0; i < CELL_COUNT_VERTICAL; i++) {
         for (int j = 0; j < CELL_COUNT_HORIZONTAL; j++) {
             float skewedX = j;
@@ -110,38 +94,41 @@ void draw_simplex_noise() {
             int skewedGridX, skewedGridY;
             float skewedGridPosX, skewedGridPosY;
             get_grid_components(skewedX, skewedY, &skewedGridX, &skewedGridY, &skewedGridPosX, &skewedGridPosY);
-            int simplexIndices[3];
-            simplexIndices[0] = (skewedGridY * GRID_COUNT_HORIZONTAL + skewedGridX) * 2;
-            simplexIndices[2] = ((skewedGridY + 1) * GRID_COUNT_HORIZONTAL + skewedGridX + 1) * 2;
+            int simplexCoordinates[6];
+            simplexCoordinates[0] = skewedGridX;
+            simplexCoordinates[1] = skewedGridY;
             if (skewedGridPosX > skewedGridPosY) {
-                simplexIndices[1] = (skewedGridY * GRID_COUNT_HORIZONTAL + skewedGridX + 1) * 2;
+                simplexCoordinates[2] = skewedGridX + 1;
+                simplexCoordinates[3] = skewedGridY;
             }
             else {
-                simplexIndices[1] = ((skewedGridY + 1) * GRID_COUNT_HORIZONTAL + skewedGridX) * 2;
+                simplexCoordinates[2] = skewedGridX;
+                simplexCoordinates[3] = skewedGridY + 1;
             }
 
+            simplexCoordinates[4] = skewedGridX + 1;
+            simplexCoordinates[5] = skewedGridY + 1;
             float kernelValue = 0.0f;
-            float distX = (float)(j % GRID_SIZE) / GRID_SIZE;
-            float distY = (float)(i % GRID_SIZE) / GRID_SIZE;
-            for (int k = 0; k < 3; k++) {
-                int xIndex = simplexIndices[k];
-                int yIndex = simplexIndices[k] + 1;
-                /*float distX = ((float)j / GRID_COUNT) - unSkewedSpaceCoordinates[xIndex];
-                float distY = ((float)i / GRID_COUNT) - unSkewedSpaceCoordinates[yIndex];*/
-                float gradX = skewedSpaceVectors[xIndex];
-                float gradY = skewedSpaceVectors[yIndex];
+            for (int k = 0; k < 6; k += 2) {
+                int simplexX = simplexCoordinates[k];
+                int simplexY = simplexCoordinates[k + 1];
+                float unskewedSimplexX = (float)simplexX, unskewedSimplexY = (float)simplexY;
+                from_skewed_space(&unskewedSimplexX, &unskewedSimplexY);
+                float distX = (j / (float)GRID_SIZE) - unskewedSimplexX;
+                float distY = (i / (float)GRID_SIZE) - unskewedSimplexY;
+                int simplexGradIndex = (simplexX * GRID_COUNT_HORIZONTAL + simplexY) * 2;
+                float gradX = get_random_byte(simplexGradIndex) + 128.0f;
+                float gradY = get_random_byte(simplexGradIndex + 1) + 128.0f;
                 float contribution = get_kernel_contribution(gradX, gradY, distX, distY);
                 kernelValue += contribution;
-                if (contribution != contribution) {
-                    log_message("error");
-                    log_int(xIndex);
-                    log_int(yIndex);
-                }
             }
 
+            log_int(kernelValue * 256.0f);
             color_cell(j, i, (int)(kernelValue * 256.0f));
         }
     }
+
+    log_message("drawing complete");
 }
 
 void populate_floats(float *array, int size) {
@@ -176,6 +163,8 @@ void from_skewed_space(float *x, float *y) {
 // (max(0, r^2 - d^2))^4 * (<distX, distY> . <gradX, gradY>)
 // r = 0.6 by default, set to 0.5 to eliminate discontinuities
 float get_kernel_contribution(float gradX, float gradY, float distX, float distY) {
+    distX = distX > 0.0f ? distX : -distX;
+    distY = distY > 0.0f ? distY : -distY;
     static float rSqrd = 0.36f;
     float distSqrd = distX * distX + distY * distY;
     float coefficient = rSqrd - distSqrd;
