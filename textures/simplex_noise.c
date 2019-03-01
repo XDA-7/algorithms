@@ -31,9 +31,7 @@ void log_float(float message);
 void clear_screen();
 void color_cell(int x, int y, int value);
 
-void draw_value_noise();
 void draw_simplex_noise();
-void populate_floats(float *array, int size);
 void get_grid_components(int x, int y, int *gridX, int *gridY, float *gridPosX, float *gridPosY);
 void to_skewed_space(float *x, float *y);
 void from_skewed_space(float *x, float *y);
@@ -60,29 +58,6 @@ int main(int argc, char * argv[])
 
     close();
     return 0;
-}
-
-void draw_value_noise() {
-    clear_screen();
-    // need one extra x and y layer for cells on the edge
-    float gridValues[GRID_COUNT];
-    populate_floats(gridValues, GRID_COUNT);
-
-    for (int i = 0; i < CELL_COUNT_VERTICAL; i++) {
-        for (int j = 0; j < CELL_COUNT_HORIZONTAL; j++) {
-            // (0, 0) (0, 1) (1, 0) (1, 1)
-            float gridVertices[4];
-            int gridX, gridY;
-            float gridPosX, gridPosY;
-            get_grid_components(j, i, &gridX, &gridY, &gridPosX, &gridPosY);
-            gridVertices[0] = gridValues[gridY * GRID_COUNT_HORIZONTAL + gridX];
-            gridVertices[1] = gridValues[(gridY + 1) * GRID_COUNT_HORIZONTAL + gridX];
-            gridVertices[2] = gridValues[gridY * GRID_COUNT_HORIZONTAL + gridX + 1];
-            gridVertices[3] = gridValues[(gridY + 1) * GRID_COUNT_HORIZONTAL + gridX + 1];
-            int value = (int)bilerp(gridVertices[0], gridVertices[1], gridVertices[2], gridVertices[3], gridPosX, gridPosY);
-            color_cell(j, i, value);
-        }
-    }
 }
 
 void draw_simplex_noise() {
@@ -139,12 +114,6 @@ void draw_simplex_noise() {
     log_float(maxVal);
     log_float(minVal);
     log_message("drawing complete");
-}
-
-void populate_floats(float *array, int size) {
-    for (int i = 0; i < size; i++) {
-        array[i] = get_random_byte(i) + 128.0f;
-    }
 }
 
 void get_grid_components(int x, int y, int *gridX, int *gridY, float *gridPosX, float *gridPosY) {

@@ -12,7 +12,7 @@ int rough_estimate(float x) {
 }
 
 /*
- * Newton's method: x(n + 1) = x(n) - f(x) / f'(x)
+ * Newton's method: x(n + 1) = x(n) - f(x(n)) / f'(x(n))
  * where values x are approximations of a root of the function
  * let f(x) = x^2 - c where c is the value we want the sqrt of
  * f'(x) = 2x
