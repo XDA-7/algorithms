@@ -3,7 +3,7 @@
         {
             "name": "Win32",
             "includePath": [
-                "C:/MinGW/include/",
+                "C:/MinGW/mingw64/include/",
                 "C:/SDL/SDL2-2.0.8/i686-w64-mingw32/include/SDL2/",
                 "${workspaceFolder}/**"
             ],
