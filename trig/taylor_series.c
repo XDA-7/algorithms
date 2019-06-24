@@ -20,7 +20,7 @@ float sine(float radians) {
     float result = radians;
     float runningX = radians;
     float runningFactorial = 1.0f;
-    static int doubleIterations = ITERATIONS * 2;
+    const int doubleIterations = ITERATIONS * 2;
     for (int i = 2; i < doubleIterations; i += 2) {
         runningX = -runningX * radians * radians;
         runningFactorial = runningFactorial * i * (i + 1);
