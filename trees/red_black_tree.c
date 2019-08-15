@@ -1,6 +1,6 @@
 #include "stdio.h"
 
-#define TREE_MAX_SIZE 1048575
+#define TREE_MAX_SIZE 65535 // 16 bits
 #define ARR_SIZE TREE_MAX_SIZE + 1
 #define NIL 0
 #define RED 0

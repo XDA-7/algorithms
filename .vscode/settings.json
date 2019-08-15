@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "*.c": "c",
+        "binary_tree.h": "c",
+        "stdio.h": "c",
+        "cstdio": "c"
+    }
+}
