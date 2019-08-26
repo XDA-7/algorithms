@@ -1,7 +1,7 @@
 #include "stdlib.h"
 #include "stdio.h"
 #include "binary_tree.h"
-#include "avl_tree.h"
+#include "treap.h"
 
 #define TEST_SIZE 7000
 
@@ -10,14 +10,11 @@ int values[TEST_SIZE];
 
 int main() {
     srand(78265);
-    avl_tree_create(20);
+    treap_create(20);
     for (int i = 1; i < TEST_SIZE; i++) {
         int key = rand() + 1;
         key_replica[i] = key;
-        int insert_index = avl_tree_insert(key);
-        if (verify_height_integrity()) {
-            tree_print();
-        }
+        int insert_index = treap_insert(key);
 
         values[insert_index] = -key;
     }
