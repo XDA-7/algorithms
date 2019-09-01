@@ -1,11 +1,13 @@
 #include "stdio.h"
-#include "matrix_mult.h"
+#include "bitonic_tour.h"
+
+Point graph[4] = {
+    { 1.0, 5.0 },
+    { 3.0, 2.0 },
+    { 4.0, 6.0 },
+    { 5.0, 3.0 },
+};
 
 int main() {
-    add_first_matrix(10, 50);
-    add_matrix(20);
-    add_matrix(20);
-    calculate_mult_order();
-    printf("%d\n", get_final_score());
-    printf("done");
+    printf("%f\n", calculate_bitonic_cycle(graph, 4));
 }

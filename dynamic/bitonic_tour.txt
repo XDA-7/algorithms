@@ -1,0 +1,23 @@
+for the point p[k] there exists two paths that go to p[1] through G[k]
+one of those paths must begin with p[k - 1], the other begins with p[y] where y < k - 1
+the total distance for the path P[k] will be equal to dist(p[k], p[k - 1]) + dist(p[k], p[y]) + the distance of the two paths starting at p[k - 1] and p[y]
+the distance of the two paths is the total distance of the shortest bitonic cycle of G[k - 1] with a path starting at p[y]
+
+procedure
+// points of the graph
+p[n]
+// d[i, j] is total distance of the shortest bitonic cycle of the graph G[i] with paths through p[i - 1] and p[j] (which can be the same point)
+d[n, n - 2]
+
+input -> n
+input -> p
+d[1, 1] = 0
+// initial distance, double since the cycle goes left to right and back again despite being trivial
+f[2, 1] = dist(p[1], p[2]) * 2
+for i <- (2 ... n):
+    dist <- infinity
+    for j <- (1 ... i - 2):
+        d[i, j] <- d[i - 1, j] + dist(p[i], p[i - 1]) + dist(p[i], p[j]) - dist(p[i - 1], p[j])
+        if d[i, j] < dist:
+            dist <- d[i, j]
+    d[i, i - 1] <- dist
