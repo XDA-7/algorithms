@@ -1,0 +1,19 @@
+The overlapping subproblems of the knapsack problem are the possible arrangements of items for the knapsack with fewer items to choose from
+or it might be the optimal set of all items with a knapsack with a smaller capacity
+
+let there be a set of n items numbered 1 to n with values v[1] to v[n] and weights w[1] to w[n]
+let each item have a value to weight ratio calculated as vwr[1] to vwr[n]
+order the set of items by weight in decreasing order such that w[x] >= w[x + 1] for all x <= n - 1
+every time an item, call it n + 1, is added to the set of possible items, there will be an optimal value for the knapsack when the item is included, and an optimal value for when it is left behind
+the optimal value when it is left behind is simply the optimal value of the knapsack with a possible selection of n items
+to obtain the optimal value when the item is included:
+    if the item weighs less than the remaining capacity of the knapsack then simply add the value and weight of the item to it
+    otherwise, for each item in the knapsack calculate the total weight and value if it is removed and item n + 1 added, take the choice of these with the largest value(since the items were ordered by decreasing weight, we know that we need to remove one item at most from the knapsack to accomodate the new item)
+once the final item has been added to the set of possible items, take the greater value of the optimal values of the knapsack with or without the item, this is the optimal value for the complete problem
+
+the requirement of ordering the items at the start of the algorithm violates the O nW requirement as n may be very large relative to W
+if this is not done then it must be considered that the addition of the item can displace multiple items in the knapsack
+
+when adding an item to the knapsack, add the item's index to a linked list of all items in the knapsack, maintained in increasing order of their vwr
+when considering adding an item to the knapsack for which insufficient space exists,
+iterate over the linked list and add their weights to the amount of free space available until there is enough
