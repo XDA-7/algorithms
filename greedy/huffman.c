@@ -21,10 +21,11 @@ typedef struct QueuedPath {
     int next;
 } QueuedPath;
 
-unsigned char wordset[] = { 1, 4, 9, 16, 25, 36, 49, 64, 81, 100, 121, 144 };
-float frequencies[] = { 0.05, 0.1, 0.025, 0.025, 0.2, 0.05, 0.05, 0.1, 0.05, 0.2, 0.05, 0.1 };
+unsigned char wordset[] = { 0, 1, 4, 9, 16, 25, 36, 49, 64, 81, 100, 121, 144 };
+float frequencies[] = { 0.0, 0.05, 0.1, 0.025, 0.025, 0.2, 0.05, 0.05, 0.1, 0.05, 0.2, 0.05, 0.1 };
 Code codes[13];
 
+int path_root;
 int allocated_paths;
 Path paths[23];
 #define QUEUE_SENTINEL 0
@@ -89,7 +90,7 @@ void write_huffman_code(int path) {
 void create_huffman_code() {
     allocated_paths = 12;
     for (int i = 0; i < 12; i++) {
-        paths[i] = (Path){ 0, 0, i + 1, frequencies[i] };
+        paths[i] = (Path){ 0, 0, i + 1, frequencies[i + 1] };
         insert_path(i);
     }
 
@@ -104,8 +105,8 @@ void create_huffman_code() {
         allocated_paths++;
     }
 
-    int root = extract_min();
-    write_huffman_code(root);
+    path_root = extract_min();
+    write_huffman_code(path_root);
 }
 
 unsigned char get_bit(unsigned char charset[], int position) {
@@ -123,12 +124,49 @@ void flip_bit(unsigned char charset[], int position) {
 
 unsigned char get_random_char() {
     float val = (float)rand() / RAND_MAX;
-    for (int i = 0; i < 12; i++) {
+    for (int i = 1; i < 13; i++) {
         val -= frequencies[i];
         if (val <= 0.0) {
             return wordset[i];
         }
     }
+}
+
+void compress_data() {
+    int compressed_word_index = 0;
+    for (int i = 0; i < 20000; i++) {
+        unsigned char word = initial_set[i];
+        int code;
+        int code_length;
+        for (int j = 1; j < 13; j++) {
+            if (word == wordset[j]) {
+                code = codes[j].code;
+                code_length = codes[j].code_length;
+                break;
+            }
+        }
+
+        for (int j = code_length - 1; j >= 0; j--) {
+            if ((code >> j) & 1u) {
+                flip_bit(compressed_words, compressed_word_index);
+            }
+
+            compressed_word_index++;
+        }
+    }
+
+    printf("compressed size: %d\n", compressed_word_index / BYTE_SIZE);
+}
+
+unsigned char decompress_data(int* index) {
+    int path_current = path_root;
+    while (!paths[path_current].code) {
+        unsigned char bit = get_bit(compressed_words, *index);
+        path_current = bit ? paths[path_current].right : paths[path_current].left;
+        (*index)++;
+    }
+
+    return wordset[paths[path_current].code];
 }
 
 int main() {
@@ -137,10 +175,17 @@ int main() {
     }
 
     create_huffman_code();
-    for (int i = 1; i < 13; i++) {
-        printf("%d\n", codes[i].code);
-        printf("%d\n", codes[i].code_length);
-    }
+    /*for (int i = 1; i < 13; i++) {
+        printf("word: %d, code: %d, code length: %d\n", wordset[i], codes[i].code, codes[i].code_length);
+    }*/
+
+    printf("create huffman\n");
+    compress_data();
+    printf("compress data\n");
+    int index = 0;
+    /*for (int i = 0; i < 100; i++) {
+        printf("%u, %u\n", initial_set[i], decompress_data(&index));
+    }*/
 
     printf("fin\n");
 }
